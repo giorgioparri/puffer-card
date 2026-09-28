@@ -1,18 +1,18 @@
 # Puffer Card
 
 [![HACS Default](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/default)
-[![GitHub Release](https://img.shields.io/github/release/naked-head/puffer-card.svg)](https://github.com/naked-head/puffer-card/releases)
-[![Validate](https://github.com/naked-head/puffer-card/actions/workflows/validate.yml/badge.svg)](https://github.com/naked-head/puffer-card/actions/workflows/validate.yml)
-[![License](https://img.shields.io/github/license/naked-head/puffer-card.svg)](https://github.com/naked-head/puffer-card/blob/main/LICENSE)
+[![GitHub Release](https://img.shields.io/github/release/giorgioparri/puffer-card.svg)](https://github.com/giorgioparri/puffer-card/releases)
+[![Validate](https://github.com/giorgioparri/puffer-card/actions/workflows/validate.yml/badge.svg)](https://github.com/giorgioparri/puffer-card/actions/workflows/validate.yml)
+[![License](https://img.shields.io/github/license/giorgioparri/puffer-card.svg)](https://github.com/giorgioparri/puffer-card/blob/main/LICENSE)
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=naked-head&repository=puffer-card&category=plugin)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=giorgioparri&repository=puffer-card&category=plugin)
 
 A custom [Home Assistant](https://www.home-assistant.io/) **Lovelace card** that
 visually represents a **buffer tank / hot-water cylinder** (a "puffer") used for
 heating and domestic hot water. It shows up to four temperatures at different
 heights and colors the tank according to the real thermal stratification.
 
-<img src="https://raw.githubusercontent.com/naked-head/puffer-card/main/images/standard.png" alt="Puffer Card – standard layout" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/standard.png" alt="Puffer Card – standard layout" width="420">
 
 ## Features
 
@@ -46,7 +46,7 @@ so there is no custom repository to add.
 ### Manual
 
 1. Download `puffer-card.js` from the
-   [latest release](https://github.com/naked-head/puffer-card/releases/latest)
+   [latest release](https://github.com/giorgioparri/puffer-card/releases/latest)
    and copy it to `/config/www/puffer-card/puffer-card.js`. That single file is
    all you need: Lit and every translation are bundled inside it, so the card
    works offline and pulls nothing from a CDN.
@@ -129,27 +129,27 @@ overlaps — layouts with 1 to 3 sensors are unaffected.
 
 The full tank with value badges on the side.
 
-<img src="https://raw.githubusercontent.com/naked-head/puffer-card/main/images/standard.png" alt="Normal layout" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/standard.png" alt="Normal layout" width="420">
 
 ### Compact
 
 A small tank next to a compact list of values — ideal for dense dashboards.
 
-<img src="https://raw.githubusercontent.com/naked-head/puffer-card/main/images/compact.png" alt="Compact layout" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/compact.png" alt="Compact layout" width="420">
 
 ### Values only (labels hidden)
 
 With `show_labels: false` the labels are removed. In the compact layout the
 values move next to the tank.
 
-<img src="https://raw.githubusercontent.com/naked-head/puffer-card/main/images/compact-no-labels.png" alt="Compact layout without labels" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/compact-no-labels.png" alt="Compact layout without labels" width="420">
 
 ### Even distribution
 
 When you configure fewer than four values, they are evenly distributed over the
 tank height instead of staying at the extremes.
 
-<img src="https://raw.githubusercontent.com/naked-head/puffer-card/main/images/two-sensors.png" alt="Two values evenly distributed" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/two-sensors.png" alt="Two values evenly distributed" width="420">
 
 ### Four sensors
 
@@ -157,7 +157,7 @@ With all four positions configured, the tank is taller and badge text is a bit
 smaller so the four values stay comfortably spaced; side pipes follow the
 number of configured sensors instead of a fixed pair.
 
-<img src="https://raw.githubusercontent.com/naked-head/puffer-card/main/images/four-sensors.png" alt="Four sensors, taller tank" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/four-sensors.png" alt="Four sensors, taller tank" width="420">
 
 ## History chart
 
@@ -166,13 +166,13 @@ fetching data from the HA History API. Curves are smoothed (Catmull-Rom
 interpolation), similar to other popular history-graph cards. Each sensor is
 drawn in a fixed color (red, orange, blue) that doubles as the legend.
 
-<img src="https://raw.githubusercontent.com/naked-head/puffer-card/main/images/chart-normal.png" alt="Normal layout with history chart" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/chart-normal.png" alt="Normal layout with history chart" width="420">
 
 When the chart is active and more than one sensor is shown, the colored dots on
 the tank and in the compact list switch to the same fixed colors, linking the
 live reading to the corresponding chart line.
 
-<img src="https://raw.githubusercontent.com/naked-head/puffer-card/main/images/chart-compact.png" alt="Compact layout with history chart" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/chart-compact.png" alt="Compact layout with history chart" width="420">
 
 ## Languages
 
@@ -231,7 +231,7 @@ match your system so the colors are meaningful for your typical operating range.
 
 ## License
 
-GPL-3.0-or-later — see [LICENSE](https://github.com/naked-head/puffer-card/blob/main/LICENSE)
+GPL-3.0-or-later — see [LICENSE](https://github.com/giorgioparri/puffer-card/blob/main/LICENSE)
 
 ## Acknowledgements
 
