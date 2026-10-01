@@ -12,7 +12,7 @@ visually represents a **buffer tank / hot-water cylinder** (a "puffer") used for
 heating and domestic hot water. It shows up to four temperatures at different
 heights and colors the tank according to the real thermal stratification.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/standard.png" alt="Puffer Card – standard layout" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.2/images/standard.png" alt="Puffer Card – standard layout" width="420">
 
 ## Features
 
@@ -129,27 +129,27 @@ overlaps — layouts with 1 to 3 sensors are unaffected.
 
 The full tank with value badges on the side.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/standard.png" alt="Normal layout" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.2/images/standard.png" alt="Normal layout" width="420">
 
 ### Compact
 
 A small tank next to a compact list of values — ideal for dense dashboards.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/compact.png" alt="Compact layout" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.2/images/compact.png" alt="Compact layout" width="420">
 
 ### Values only (labels hidden)
 
 With `show_labels: false` the labels are removed. In the compact layout the
 values move next to the tank.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/compact-no-labels.png" alt="Compact layout without labels" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.2/images/compact-no-labels.png" alt="Compact layout without labels" width="420">
 
 ### Even distribution
 
 When you configure fewer than four values, they are evenly distributed over the
 tank height instead of staying at the extremes.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/two-sensors.png" alt="Two values evenly distributed" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.2/images/two-sensors.png" alt="Two values evenly distributed" width="420">
 
 ### Four sensors
 
@@ -157,7 +157,7 @@ With all four positions configured, the tank is taller and badge text is a bit
 smaller so the four values stay comfortably spaced; side pipes follow the
 number of configured sensors instead of a fixed pair.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/four-sensors.png" alt="Four sensors, taller tank" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.2/images/four-sensors.png" alt="Four sensors, taller tank" width="420">
 
 ## History chart
 
@@ -166,13 +166,13 @@ fetching data from the HA History API. Curves are smoothed (Catmull-Rom
 interpolation), similar to other popular history-graph cards. Each sensor is
 drawn in a fixed color (red, orange, blue) that doubles as the legend.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/chart-normal.png" alt="Normal layout with history chart" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.2/images/chart-normal.png" alt="Normal layout with history chart" width="420">
 
 When the chart is active and more than one sensor is shown, the colored dots on
 the tank and in the compact list switch to the same fixed colors, linking the
 live reading to the corresponding chart line.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/main/images/chart-compact.png" alt="Compact layout with history chart" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.2/images/chart-compact.png" alt="Compact layout with history chart" width="420">
 
 ## Languages
 
