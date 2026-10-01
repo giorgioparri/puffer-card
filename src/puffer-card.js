@@ -4,7 +4,7 @@
  * cylinder with 1 to 4 temperatures placed at different heights.
  * Optionally displays a history chart below (or above) the tank.
  *
- * Repo: https://github.com/naked-head/puffer-card
+ * Repo: https://github.com/giorgioparri/puffer-card
  * License: MIT
  */
 
@@ -900,7 +900,7 @@ window.customCards.push({
   name: "Puffer Card",
   description: "Represents a buffer tank / boiler with 1-4 temperatures at different heights.",
   preview: true,
-  documentationURL: "https://github.com/naked-head/puffer-card",
+  documentationURL: "https://github.com/giorgioparri/puffer-card",
 });
 
 console.info(

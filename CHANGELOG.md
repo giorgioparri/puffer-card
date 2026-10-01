@@ -4,7 +4,10 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-09-28
+
 ### Changed
+- The project moved to the GitHub username `giorgioparri` (previously `naked-head`): links and badges in the README and the repository URL in the card's own metadata are updated. Nothing to do — existing installations keep working and GitHub redirects the old repository URLs.
 - The release workflow now checks that the README screenshots are pinned to the tag being released, so the README shown in HACS matches the installed version.
 
 ### Fixed
@@ -131,16 +134,17 @@ All notable changes to this project are documented in this file. The format is b
 - Multilingual UI (English / Italian) loaded from external per-language files under `dist/translations/`, with a built-in English fallback so the UI never shows raw keys.
 - Theme-aware styling.
 
-[Unreleased]: https://github.com/naked-head/puffer-card/compare/v1.5.1...HEAD
-[1.5.1]: https://github.com/naked-head/puffer-card/compare/v1.5.0...v1.5.1
-[1.5.0]: https://github.com/naked-head/puffer-card/compare/v1.4.0...v1.5.0
-[1.4.0]: https://github.com/naked-head/puffer-card/compare/v1.3.0...v1.4.0
-[1.3.0]: https://github.com/naked-head/puffer-card/compare/v1.2.3...v1.3.0
-[1.2.3]: https://github.com/naked-head/puffer-card/compare/v1.2.2...v1.2.3
-[1.2.2]: https://github.com/naked-head/puffer-card/compare/v1.2.1...v1.2.2
-[1.2.1]: https://github.com/naked-head/puffer-card/compare/v1.2.0...v1.2.1
-[1.2.0]: https://github.com/naked-head/puffer-card/compare/v1.1.2...v1.2.0
-[1.1.2]: https://github.com/naked-head/puffer-card/compare/v1.1.1...v1.1.2
-[1.1.1]: https://github.com/naked-head/puffer-card/compare/v1.1.0...v1.1.1
-[1.1.0]: https://github.com/naked-head/puffer-card/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/naked-head/puffer-card/releases/tag/v1.0.0
+[Unreleased]: https://github.com/giorgioparri/puffer-card/compare/v1.5.2...HEAD
+[1.5.2]: https://github.com/giorgioparri/puffer-card/compare/v1.5.1...v1.5.2
+[1.5.1]: https://github.com/giorgioparri/puffer-card/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/giorgioparri/puffer-card/compare/v1.4.0...v1.5.0
+[1.4.0]: https://github.com/giorgioparri/puffer-card/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/giorgioparri/puffer-card/compare/v1.2.3...v1.3.0
+[1.2.3]: https://github.com/giorgioparri/puffer-card/compare/v1.2.2...v1.2.3
+[1.2.2]: https://github.com/giorgioparri/puffer-card/compare/v1.2.1...v1.2.2
+[1.2.1]: https://github.com/giorgioparri/puffer-card/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/giorgioparri/puffer-card/compare/v1.1.2...v1.2.0
+[1.1.2]: https://github.com/giorgioparri/puffer-card/compare/v1.1.1...v1.1.2
+[1.1.1]: https://github.com/giorgioparri/puffer-card/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/giorgioparri/puffer-card/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/giorgioparri/puffer-card/releases/tag/v1.0.0

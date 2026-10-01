@@ -77,7 +77,7 @@ jobs:
                 [ "$ref" = "$TAG" ] || { echo "::error::$file must be pinned to $TAG, found '$ref'. Update the README, commit, and re-tag."; bad=1; }
                 ;;
             esac
-          done < <(grep -oE 'raw\.githubusercontent\.com/naked-head/puffer-card/[^"]+\.png' README.md | sort -u)
+          done < <(grep -oE 'raw\.githubusercontent\.com/giorgioparri/puffer-card/[^"]+\.png' README.md | sort -u)
           [ "$bad" -eq 0 ] || exit 1
           echo "README image refs OK."
       - name: Verify README links are absolute
