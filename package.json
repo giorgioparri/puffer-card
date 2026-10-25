@@ -1,6 +1,6 @@
 {
   "name": "puffer-card",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Custom Lovelace card that visually represents a buffer tank / hot-water cylinder with 1 to 4 temperatures placed at different heights.",
   "private": true,
   "type": "module",

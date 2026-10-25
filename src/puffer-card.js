@@ -96,25 +96,41 @@ function tempColor(t, min, max) {
 const HOUR_OPTIONS = [2, 6, 12, 24, 48];
 
 /**
- * Fetch history for one entity via the HA REST history API.
- * Returns an array of { t: Date, v: number } sorted ascending.
+ * Fetch history for several entities in a single call via the WebSocket
+ * history API (`history/history_during_period`).
+ *
+ * hass.callWS rides the frontend's already-authenticated WebSocket, so no
+ * access token is involved. The previous implementation used a raw fetch()
+ * against the REST API with hass.auth.data.access_token, which is never
+ * refreshed on a dashboard that just stays open (wall tablets, kiosks): after
+ * 30 minutes every poll failed with a 401 and was logged by HA as an invalid
+ * login attempt.
+ *
+ * Returns a Map<entityId, Array<{ t: Date, v: number }>> sorted ascending.
+ * Rejects if the WebSocket call fails, so the caller can keep the data it has.
  */
-async function fetchHistory(hass, entityId, hours) {
+async function fetchHistory(hass, entityIds, hours) {
   const end   = new Date();
   const start = new Date(end.getTime() - hours * 3600 * 1000);
-  const url   = `/api/history/period/${start.toISOString()}` +
-                `?filter_entity_id=${entityId}&end_time=${end.toISOString()}&minimal_response=true`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${hass.auth.data.access_token}` },
+  const result = await hass.callWS({
+    type: "history/history_during_period",
+    start_time: start.toISOString(),
+    end_time: end.toISOString(),
+    entity_ids: entityIds,
+    minimal_response: true,
+    no_attributes: true,
   });
-  if (!res.ok) return [];
-  const json = await res.json();
-  // history API returns [[...states]] — one array per entity
-  const states = json[0] || [];
-  return states
-    .filter((s) => s.state !== "unavailable" && s.state !== "unknown")
-    .map((s) => ({ t: new Date(s.last_changed || s.lu * 1000), v: Number(s.state) }))
-    .filter((s) => !isNaN(s.v));
+  // Compressed state format: s = state, lu = last_updated (epoch seconds),
+  // lc = last_changed (epoch seconds), present only when it differs from lu.
+  const map = new Map();
+  for (const entityId of entityIds) {
+    const states = result?.[entityId] || [];
+    map.set(entityId, states
+      .filter((s) => s.s !== "unavailable" && s.s !== "unknown")
+      .map((s) => ({ t: new Date((s.lc ?? s.lu) * 1000), v: Number(s.s) }))
+      .filter((p) => !isNaN(p.v)));
+  }
+  return map;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -360,11 +376,13 @@ class PufferCard extends LitElement {
       const data    = this._data();
       const wanted  = this._config.chart_sensors || POSITIONS.map((p) => p.key);
       const toFetch = data.filter((p) => wanted.includes(p.key) && p.cfg?.entity);
-      const results = await Promise.all(
-        toFetch.map((p) => fetchHistory(this.hass, p.cfg.entity, hours))
-      );
+      // One request for all sensors; the same entity may sit at two positions.
+      const entityIds = [...new Set(toFetch.map((p) => p.cfg.entity))];
+      const byEntity  = entityIds.length
+        ? await fetchHistory(this.hass, entityIds, hours)
+        : new Map();
       const map = new Map();
-      toFetch.forEach((p, i) => map.set(p.key, results[i]));
+      toFetch.forEach((p) => map.set(p.key, byEntity.get(p.cfg.entity) || []));
       // Assign the new history and trigger a single re-render.
       this._history = map;
       this.requestUpdate();
