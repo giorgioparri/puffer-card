@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [1.5.3] - 2026-10-25
+
+### Fixed
+- The history chart no longer stops working on dashboards that stay open for a long time, such as wall tablets and kiosks. After about 30 minutes every refresh failed, Home Assistant logged it as "Login attempt or request with invalid authentication" (with a notification) roughly once a minute per sensor, and the chart could go empty. Nothing to do on your side: update the card and the log entries stop. ([#10](https://github.com/giorgioparri/puffer-card/issues/10))
+
+### Changed
+- The chart now loads the history of all its sensors in a single request instead of one per sensor.
+
 ## [1.5.2] - 2026-09-28
 
 ### Changed
@@ -134,7 +142,8 @@ All notable changes to this project are documented in this file. The format is b
 - Multilingual UI (English / Italian) loaded from external per-language files under `dist/translations/`, with a built-in English fallback so the UI never shows raw keys.
 - Theme-aware styling.
 
-[Unreleased]: https://github.com/giorgioparri/puffer-card/compare/v1.5.2...HEAD
+[Unreleased]: https://github.com/giorgioparri/puffer-card/compare/v1.5.3...HEAD
+[1.5.3]: https://github.com/giorgioparri/puffer-card/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/giorgioparri/puffer-card/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/giorgioparri/puffer-card/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/giorgioparri/puffer-card/compare/v1.4.0...v1.5.0
