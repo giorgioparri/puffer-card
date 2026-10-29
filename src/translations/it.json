@@ -29,5 +29,20 @@
   "icon": "Icona",
   "icon_mode": "Posizione icona",
   "icon_mode_beside": "Accanto al titolo",
-  "icon_mode_replace": "Sostituisce il titolo"
+  "icon_mode_replace": "Sostituisce il titolo",
+  "info_position": "Posizione valori aggiuntivi",
+  "info_pos_top": "Sopra, nella riga del titolo",
+  "info_pos_inside": "Dentro il serbatoio",
+  "info_pos_between": "Tra serbatoio e grafico",
+  "info_pos_bottom": "Sotto",
+  "info_pos_left": "Lato sinistro, ruotato",
+  "info_slot": "Valore aggiuntivo",
+  "info_entity": "Entità",
+  "info_label": "Etichetta",
+  "info_icon": "Icona",
+  "show_label": "Mostra etichetta",
+  "show_icon": "Mostra icona",
+  "opt_auto": "Auto",
+  "opt_show": "Mostra",
+  "opt_hide": "Nascondi"
 }

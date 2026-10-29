@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-29
+
+### Added
+- Extra values: up to four values from any entity — the system pressure, a pump, a valve — shown next to the temperatures. They are formatted by Home Assistant itself, so numbers follow your locale and states are translated, and they stay out of the color scale and the chart. Click one to open its more-info dialog. ([#13](https://github.com/giorgioparri/puffer-card/issues/13))
+- `info_position` places them in the title row (`top`, the default), on the tank (`inside`), between the tank and the chart (`between`), at the bottom of the card (`bottom`) or rotated along the left side of the tank (`left`). `top`, `inside` and `left` don't make the card any taller.
+- `show_label` and `show_icon` on each value override whether its label and icon are shown; by default this depends on the position, and a hidden label is still shown as a tooltip. Without an `icon`, Home Assistant picks one from the entity's domain and device class.
+- Everything above can be set from the visual editor: a position dropdown and up to four *Extra value* sections, a new one appearing as soon as the previous one is filled in.
+- [DOCS.md](https://github.com/giorgioparri/puffer-card/blob/main/DOCS.md) shows every layout with the configuration that produces it.
+
+### Changed
+- Existing cards are unaffected: without `info` the card renders exactly as before, so there is nothing to do when updating.
+- The screenshots were regenerated with the current card, and most of them moved from the README to DOCS.md.
+
 ## [1.5.3] - 2026-10-25
 
 ### Fixed
@@ -142,7 +155,8 @@ All notable changes to this project are documented in this file. The format is b
 - Multilingual UI (English / Italian) loaded from external per-language files under `dist/translations/`, with a built-in English fallback so the UI never shows raw keys.
 - Theme-aware styling.
 
-[Unreleased]: https://github.com/giorgioparri/puffer-card/compare/v1.5.3...HEAD
+[Unreleased]: https://github.com/giorgioparri/puffer-card/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/giorgioparri/puffer-card/compare/v1.5.3...v1.6.0
 [1.5.3]: https://github.com/giorgioparri/puffer-card/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/giorgioparri/puffer-card/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/giorgioparri/puffer-card/compare/v1.5.0...v1.5.1

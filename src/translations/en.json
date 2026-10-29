@@ -29,5 +29,20 @@
   "icon": "Icon",
   "icon_mode": "Icon position",
   "icon_mode_beside": "Beside title",
-  "icon_mode_replace": "Replace title"
+  "icon_mode_replace": "Replace title",
+  "info_position": "Extra values position",
+  "info_pos_top": "Top, in the title row",
+  "info_pos_inside": "Inside the tank",
+  "info_pos_between": "Between tank and chart",
+  "info_pos_bottom": "Bottom",
+  "info_pos_left": "Left side, rotated",
+  "info_slot": "Extra value",
+  "info_entity": "Entity",
+  "info_label": "Label",
+  "info_icon": "Icon",
+  "show_label": "Show label",
+  "show_icon": "Show icon",
+  "opt_auto": "Auto",
+  "opt_show": "Show",
+  "opt_hide": "Hide"
 }
