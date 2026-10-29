@@ -11,8 +11,9 @@ A custom [Home Assistant](https://www.home-assistant.io/) **Lovelace card** that
 visually represents a **buffer tank / hot-water cylinder** (a "puffer") used for
 heating and domestic hot water. It shows up to four temperatures at different
 heights and colors the tank according to the real thermal stratification.
+Extra values such as the system pressure or a pump state can sit alongside.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.3/images/standard.png" alt="Puffer Card – standard layout" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.6.0-beta.1/images/standard.png" alt="Puffer Card – standard layout" width="420">
 
 ## Features
 
@@ -26,6 +27,8 @@ heights and colors the tank according to the real thermal stratification.
 - Optional **icon** next to the title, or replacing it entirely.
 - **Optional history chart** below or above the tank, with selectable period
   (2 h – 48 h), smooth area or line style, and per-sensor visibility.
+- Up to four **extra values** from any entity (pressure, pump, valve, ...),
+  placed in the title row, on the tank, beside it, or below it.
 - Click any value to open the entity's **more-info** dialog.
 - Built-in **graphical editor** — no YAML required.
 - **Multilingual** UI (English / Italian, more welcome) following Home Assistant's language.
@@ -93,6 +96,13 @@ chart_sensors:          # which positions to include in the chart
   - middle
   - extra
   - bottom
+info_position: top      # top, inside, between, bottom or left
+info:                   # up to four extra values, any entity
+  - entity: sensor.heating_pressure
+    label: Pressure
+  - entity: binary_sensor.circulation_pump
+    label: Pump
+    icon: mdi:pump
 ```
 
 To show **fewer than four values**, simply omit the positions you don't need
@@ -122,57 +132,35 @@ overlaps — layouts with 1 to 3 sensors are unaffected.
 | `chart_hours` | number | `24` | History period: `2`, `6`, `12`, `24` or `48` |
 | `chart_style` | string | `area` | `area` (filled) or `line` |
 | `chart_sensors` | list | all | Positions to include: `top`, `middle`, `extra`, `bottom` |
+| `info_position` | string | `top` | Where the extra values go: `top`, `inside`, `between`, `bottom` or `left` |
+| `info` | list | – | Up to four extra values: `{ entity, label, icon, show_label, show_icon }` |
+| `info[].entity` | string | – | Any entity |
+| `info[].label` | string | entity name | Label shown next to the value, and as tooltip |
+| `info[].icon` | string | entity icon | Icon shown next to the value |
+| `info[].show_label` | boolean | by position | Override whether the label is shown |
+| `info[].show_icon` | boolean | by position | Override whether the icon is shown |
 
-## Layouts
+Whether an extra value shows its label and icon by default depends on the
+position, since some have little room. The defaults for each position, and
+the limits of `inside` and `left` in the compact layout, are in
+[DOCS.md](https://github.com/giorgioparri/puffer-card/blob/v1.6.0-beta.1/DOCS.md#extra-values).
+In the visual editor a new *Extra value* section appears as soon as the
+previous one is filled in, up to four.
 
-### Normal
+## Extra values
 
-The full tank with value badges on the side.
+Up to four values from any entity, shown as Home Assistant formats them —
+numbers in your locale, states translated — without a color scale. Here in the
+title row, the default position, where they don't make the card any taller:
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.3/images/standard.png" alt="Normal layout" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.6.0-beta.1/images/info-top.png" alt="Extra values in the title row" width="420">
 
-### Compact
+## Examples
 
-A small tank next to a compact list of values — ideal for dense dashboards.
-
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.3/images/compact.png" alt="Compact layout" width="420">
-
-### Values only (labels hidden)
-
-With `show_labels: false` the labels are removed. In the compact layout the
-values move next to the tank.
-
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.3/images/compact-no-labels.png" alt="Compact layout without labels" width="420">
-
-### Even distribution
-
-When you configure fewer than four values, they are evenly distributed over the
-tank height instead of staying at the extremes.
-
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.3/images/two-sensors.png" alt="Two values evenly distributed" width="420">
-
-### Four sensors
-
-With all four positions configured, the tank is taller and badge text is a bit
-smaller so the four values stay comfortably spaced; side pipes follow the
-number of configured sensors instead of a fixed pair.
-
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.3/images/four-sensors.png" alt="Four sensors, taller tank" width="420">
-
-## History chart
-
-When `show_chart: true` a history chart is rendered below (or above) the tank,
-fetching data from the HA History API. Curves are smoothed (Catmull-Rom
-interpolation), similar to other popular history-graph cards. Each sensor is
-drawn in a fixed color (red, orange, blue) that doubles as the legend.
-
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.3/images/chart-normal.png" alt="Normal layout with history chart" width="420">
-
-When the chart is active and more than one sensor is shown, the colored dots on
-the tank and in the compact list switch to the same fixed colors, linking the
-live reading to the corresponding chart line.
-
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.5.3/images/chart-compact.png" alt="Compact layout with history chart" width="420">
+[DOCS.md](https://github.com/giorgioparri/puffer-card/blob/v1.6.0-beta.1/DOCS.md)
+shows every layout with the configuration that produces it: standard and
+compact, values only, two and four sensors, the history chart, and the extra
+values in each of their five positions, plus the visual editor.
 
 ## Languages
 
