@@ -2,7 +2,9 @@
  * Puffer Card
  * Custom Lovelace card that visually represents a buffer tank / hot-water
  * cylinder with 1 to 4 temperatures placed at different heights.
- * Optionally displays a history chart below (or above) the tank.
+ * Optionally displays a history chart below (or above) the tank, and up to
+ * four extra values of any entity (pressure, pump state, ...) at a chosen
+ * position.
  *
  * Repo: https://github.com/giorgioparri/puffer-card
  * License: MIT
@@ -49,6 +51,35 @@ const POSITIONS = [
   { key: "extra",  labelKey: "label_extra"  },
   { key: "bottom", labelKey: "label_bottom" },
 ];
+
+/** Where the extra values (`info`) can be placed. The first one is the default. */
+const INFO_POSITIONS = ["top", "inside", "between", "bottom", "left"];
+
+/** Maximum number of extra values. */
+const INFO_MAX = 4;
+
+/**
+ * Per-position defaults for show_label / show_icon, used when an `info` entry
+ * does not set them. Narrow positions drop the label (it stays in the tooltip);
+ * the positions drawn on or beside the tank drop the icon.
+ * In the compact layout `inside` and `left` drop the label as well.
+ */
+const INFO_DEFAULTS = {
+  top:     { label: false, icon: true  },
+  inside:  { label: true,  icon: false },
+  between: { label: true,  icon: true  },
+  bottom:  { label: true,  icon: true  },
+  left:    { label: true,  icon: false },
+};
+
+/** Card defaults, shared by the card and the editor. */
+const CONFIG_DEFAULTS = {
+  min_temp: 20, max_temp: 80, layout: "normal", show_labels: true,
+  icon: "", icon_mode: "beside",
+  show_chart: false, chart_hours: 24, chart_position: "below",
+  chart_style: "area",
+  info_position: "top",
+};
 
 /** Fixed series colors for the chart (independent of temperature ramp). */
 const CHART_COLORS = ["#e53935", "#fb8c00", "#1565c0", "#00897b"];
@@ -314,13 +345,7 @@ class PufferCard extends LitElement {
   setConfig(config) {
     if (!config) throw new Error("Invalid configuration");
     const prev = this._config;
-    const merged = {
-      min_temp: 20, max_temp: 80, layout: "normal", show_labels: true,
-      icon: "", icon_mode: "beside",
-      show_chart: false, chart_hours: 24, chart_position: "below",
-      chart_style: "area",
-      ...config,
-    };
+    const merged = { ...CONFIG_DEFAULTS, ...config };
     // Always materialize chart_sensors explicitly (instead of relying on a
     // runtime fallback) so the multi-select in the editor and the chart
     // rendering never disagree about which sensors are selected.
@@ -351,6 +376,8 @@ class PufferCard extends LitElement {
   getCardSize() {
     let size = this._config?.layout === "compact" ? 2 : 5;
     if (this._config?.show_chart) size += 2;
+    const pos = this._infoPos();
+    if ((pos === "between" || pos === "bottom") && this._infoItems(false).length) size += 1;
     return size;
   }
 
@@ -463,6 +490,70 @@ class PufferCard extends LitElement {
     fireEvent(this, "hass-more-info", { entityId });
   }
 
+  /* ---- extra values (info) ---------------------------------------------- */
+
+  _infoPos() {
+    const p = this._config?.info_position;
+    return INFO_POSITIONS.includes(p) ? p : INFO_POSITIONS[0];
+  }
+
+  /**
+   * Formatted state split into value and unit, so the unit can be styled
+   * smaller. Uses Home Assistant's own formatter when available: numbers
+   * follow the user's locale, and states such as "on" are translated.
+   */
+  _infoValue(st) {
+    if (!st) return { val: "—", unit: "" };
+    const unit = st.attributes?.unit_of_measurement || "";
+    const full = typeof this.hass?.formatEntityState === "function"
+      ? this.hass.formatEntityState(st)
+      : `${st.state}${unit ? ` ${unit}` : ""}`;
+    if (unit && full.endsWith(unit)) return { val: full.slice(0, -unit.length).trim(), unit };
+    return { val: full, unit: "" };
+  }
+
+  /**
+   * Resolved `info` entries: at most INFO_MAX, entries without an entity are
+   * skipped, and inside the compact tank only the first one fits.
+   */
+  _infoItems(compact) {
+    const pos  = this._infoPos();
+    const defs = INFO_DEFAULTS[pos];
+    const narrow = compact && (pos === "inside" || pos === "left");
+    let list = Array.isArray(this._config?.info)
+      ? this._config.info.filter((i) => i && i.entity).slice(0, INFO_MAX)
+      : [];
+    if (compact && pos === "inside") list = list.slice(0, 1);
+    return list.map((i) => {
+      const st = this.hass?.states?.[i.entity] || null;
+      const { val, unit } = this._infoValue(st);
+      return {
+        entity: i.entity,
+        stateObj: st,
+        label: (i.label && i.label.toString()) || st?.attributes?.friendly_name || i.entity,
+        icon: i.icon || st?.attributes?.icon || "",
+        val, unit,
+        showLabel: typeof i.show_label === "boolean" ? i.show_label : (narrow ? false : defs.label),
+        showIcon:  typeof i.show_icon  === "boolean" ? i.show_icon  : defs.icon,
+      };
+    });
+  }
+
+  /**
+   * Gap centres (0..1 offsets) between the configured sensors, ordered top to
+   * bottom, so values drawn on the tank avoid the sensor lines. Falls back to
+   * even spacing when there are more values than gaps.
+   */
+  _infoOffsets(data, n) {
+    const offs = [0, ...data.map((p) => p.off).sort((a, b) => a - b), 1];
+    const gaps = [];
+    for (let i = 0; i < offs.length - 1; i++) {
+      gaps.push({ c: (offs[i] + offs[i + 1]) / 2, w: offs[i + 1] - offs[i] });
+    }
+    if (n > gaps.length) return Array.from({ length: n }, (_, i) => (i + 1) / (n + 1));
+    return gaps.sort((a, b) => b.w - a.w).slice(0, n).map((g) => g.c).sort((a, b) => a - b);
+  }
+
   _gradient(data, min, max) {
     let stops = data
       .filter((p) => p.temp !== null)
@@ -540,6 +631,50 @@ class PufferCard extends LitElement {
       </defs>`;
   }
 
+  /* ---- render: extra values -------------------------------------------- */
+
+  _infoIcon(it) {
+    if (it.icon) return html`<ha-icon class="info-icon" .icon=${it.icon}></ha-icon>`;
+    // No explicit icon: let Home Assistant pick the domain / device-class icon.
+    if (it.stateObj && customElements.get("ha-state-icon")) {
+      return html`<ha-state-icon class="info-icon" .hass=${this.hass} .stateObj=${it.stateObj}></ha-state-icon>`;
+    }
+    return "";
+  }
+
+  _chip(it, cls = "") {
+    return html`
+      <div class="chip ${cls}" title=${it.label} @click=${() => this._moreInfo(it.entity)}>
+        ${it.showIcon ? this._infoIcon(it) : ""}
+        ${it.showLabel ? html`<span class="chip-label">${it.label}</span>` : ""}
+        <span class="chip-val">${it.val}${it.unit ? html`<span class="chip-unit">${it.unit}</span>` : ""}</span>
+      </div>`;
+  }
+
+  _chips(items, cls = "") {
+    if (!items.length) return "";
+    return html`<div class="info-chips ${cls}">${items.map((it) => this._chip(it))}</div>`;
+  }
+
+  /**
+   * HTML layer laid exactly over an SVG drawn with `preserveAspectRatio meet`:
+   * it takes the SVG's aspect ratio and full height, so percentages map to
+   * viewBox coordinates whether the SVG is limited by its width or by its
+   * max-height. HTML instead of SVG text gives real text measurement, icons,
+   * and the same chip styling as the other positions.
+   */
+  _overlay(vbW, vbH, children) {
+    return html`<div class="overlay" style="aspect-ratio:${vbW} / ${vbH}">${children}</div>`;
+  }
+
+  _at(xPct, yPct, content) {
+    return html`<div class="at" style="left:${xPct}%;top:${yPct}%">${content}</div>`;
+  }
+
+  _vstack(items) {
+    return html`<div class="vstack">${items.map((it) => this._chip(it, "vertical"))}</div>`;
+  }
+
   /* ---- render: normal layout ------------------------------------------- */
 
   /**
@@ -598,7 +733,7 @@ class PufferCard extends LitElement {
       </g>`;
   }
 
-  _renderNormal(data, min, max, showLabels) {
+  _renderNormal(data, min, max, showLabels, items) {
     const { stops, bottomColor } = this._gradient(data, min, max);
     const useChart   = this._config.show_chart;
     const chartAbove = this._config.chart_position === "above";
@@ -634,9 +769,35 @@ class PufferCard extends LitElement {
         </g>
         ${data.map((p) => this._badge(p, min, max, showLabels, this._dotColor(p, data, min, max), m))}
       </svg>`;
+
+    const pos = this._infoPos();
+    let overlay = "";
+    if (items.length && pos === "inside") {
+      // Centred on the tank body, in the gaps between the sensor lines.
+      const offs = this._infoOffsets(data, items.length);
+      overlay = items.map((it, i) => this._at(
+        (110 / 380) * 100,
+        ((m.liquidTop + offs[i] * m.liquidH) / m.viewH) * 100,
+        this._chip(it, "on-tank"),
+      ));
+    } else if (items.length && pos === "left") {
+      // The free strip left of the tank (viewBox x 0..40), centred on the liquid.
+      overlay = this._at(
+        (18 / 380) * 100,
+        ((m.liquidTop + m.liquidH / 2) / m.viewH) * 100,
+        this._vstack(items),
+      );
+    }
+    const tankBox = overlay
+      ? html`<div class="tank-wrap">${tank}${this._overlay(380, m.viewH, overlay)}</div>`
+      : tank;
+    const between = pos === "between" && useChart ? this._chips(items, "between") : "";
+
     return html`
       ${useChart && chartAbove  ? this._renderChart(data, false) : ""}
-      ${tank}
+      ${useChart && chartAbove  ? between : ""}
+      ${tankBox}
+      ${useChart && !chartAbove ? between : ""}
       ${useChart && !chartAbove ? this._renderChart(data, false) : ""}`;
   }
 
@@ -666,13 +827,20 @@ class PufferCard extends LitElement {
       </svg>`;
   }
 
-  _renderCompact(data, min, max, showLabels) {
+  _renderCompact(data, min, max, showLabels, items) {
     const useChart   = this._config.show_chart;
     const chartAbove = this._config.chart_position === "above";
     const quad       = data.length === 4;
+    const pos        = this._infoPos();
+    // Mini tank: viewBox 84 x 124, liquid from y 14 to y 110.
+    const inside = items.length && pos === "inside"
+      ? this._overlay(84, 124, this._at(50, ((14 + this._infoOffsets(data, 1)[0] * 96) / 124) * 100,
+          this._chip(items[0], "on-tank small")))
+      : "";
     const body = html`
       <div class="compact ${quad ? "is-quad" : ""}">
-        <div class="mini">${this._miniTank(data, min, max)}</div>
+        ${items.length && pos === "left" ? this._vstack(items) : ""}
+        <div class="mini">${this._miniTank(data, min, max)}${inside}</div>
         <div class="rows">
           ${data.map((p) => {
             const color = tempColor(p.temp, min, max);
@@ -690,9 +858,12 @@ class PufferCard extends LitElement {
           })}
         </div>
       </div>`;
+    const between = pos === "between" && useChart ? this._chips(items, "between small") : "";
     return html`
       ${useChart && chartAbove  ? this._renderChart(data, true) : ""}
+      ${useChart && chartAbove  ? between : ""}
       ${body}
+      ${useChart && !chartAbove ? between : ""}
       ${useChart && !chartAbove ? this._renderChart(data, true) : ""}`;
   }
 
@@ -710,20 +881,30 @@ class PufferCard extends LitElement {
     const hasIcon  = !!this._config.icon;
     const replaceTitle = hasIcon && this._config.icon_mode === "replace";
 
+    const pos   = this._infoPos();
+    const items = this._infoItems(compact);
+    const topChips = pos === "top" && items.length
+      ? this._chips(items, `in-title${compact ? " small" : ""}`)
+      : "";
+    const atBottom = items.length &&
+      (pos === "bottom" || (pos === "between" && !this._config.show_chart));
+    const name = replaceTitle ? "" : this._config.name;
+
     return html`
       <ha-card class=${compact ? "is-compact" : ""}>
-        ${this._config.name || hasIcon
+        ${this._config.name || hasIcon || topChips
           ? html`
-              <div class="title">
+              <div class="title ${topChips ? "has-info" : ""}">
                 ${hasIcon ? html`<ha-icon class="title-icon" icon=${this._config.icon}></ha-icon>` : ""}
-                ${replaceTitle ? "" : this._config.name}
+                ${topChips ? html`<span class="title-name">${name}</span>${topChips}` : name}
               </div>`
           : ""}
         <div class="container">
           ${compact
-            ? this._renderCompact(data, min, max, showLabels)
-            : this._renderNormal(data, min, max, showLabels)}
+            ? this._renderCompact(data, min, max, showLabels, items)
+            : this._renderNormal(data, min, max, showLabels, items)}
         </div>
+        ${atBottom ? this._chips(items, `bottom${compact ? " small" : ""}`) : ""}
       </ha-card>`;
   }
 
@@ -766,6 +947,45 @@ class PufferCard extends LitElement {
       .compact.is-quad .rval { font-size: 1rem; }
       .compact.is-quad .runit { font-size: 0.68rem; }
       .compact.is-quad .dot { width: 9px; height: 9px; }
+      /* extra values (info) */
+      .title.has-info .title-name { flex: 0 1 auto; min-width: 0; white-space: nowrap;
+                                    overflow: hidden; text-overflow: ellipsis; }
+      .info-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+      .info-chips.in-title { flex: 0 0 auto; flex-wrap: nowrap; margin-left: auto; font-weight: 400; }
+      .info-chips.between { padding: 2px 4px 0; }
+      .info-chips.bottom { padding: 6px 4px 4px; }
+      .chip { display: flex; align-items: center; gap: 5px; cursor: pointer; line-height: 1.2;
+              padding: 3px 10px 3px 8px; border-radius: 14px; white-space: nowrap;
+              background: var(--secondary-background-color, rgba(0,0,0,0.05));
+              border: 1px solid var(--divider-color, rgba(0,0,0,0.12)); }
+      .chip:hover { border-color: var(--primary-color); }
+      .chip-label { color: var(--secondary-text-color, #727272); font-size: 0.78rem; font-weight: 600; }
+      .chip-val { color: var(--primary-text-color); font-size: 0.9rem; font-weight: 700; }
+      .chip-unit { font-size: 0.72em; font-weight: 600; margin-left: 2px; }
+      .info-icon { --mdc-icon-size: 16px; display: inline-flex; flex: 0 0 auto;
+                   color: var(--state-icon-color, var(--secondary-text-color)); }
+      .small .chip, .chip.small { padding: 2px 8px 2px 6px; }
+      .small .chip-label, .chip.small .chip-label { font-size: 0.72rem; }
+      .small .chip-val, .chip.small .chip-val { font-size: 0.82rem; }
+      .small .info-icon, .chip.small .info-icon { --mdc-icon-size: 14px; }
+      /* on the tank body */
+      .chip.on-tank { background: rgba(0,0,0,0.38); border-color: transparent; }
+      .chip.on-tank .chip-val { color: #fff; }
+      .chip.on-tank .chip-label, .chip.on-tank .info-icon { color: rgba(255,255,255,0.85); }
+      .chip.on-tank.small { padding: 1px 5px; }
+      /* rotated, reading bottom to top */
+      .vstack { display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+      .compact .vstack { flex: 0 0 auto; }
+      .chip.vertical { writing-mode: vertical-rl; transform: rotate(180deg); padding: 10px 3px; gap: 6px; }
+      .chip.vertical .info-icon { transform: rotate(90deg); }
+      .is-compact .chip.vertical { padding: 6px 2px; }
+      .is-compact .chip.vertical .chip-label { font-size: 0.68rem; }
+      .is-compact .chip.vertical .chip-val { font-size: 0.78rem; }
+      /* HTML layer over the tank SVG, see _overlay() */
+      .tank-wrap, .compact .mini { position: relative; }
+      .overlay { position: absolute; top: 0; bottom: 0; left: 50%; height: 100%;
+                 transform: translateX(-50%); pointer-events: none; }
+      .at { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; }
       /* chart */
       .chart-wrap { width: 100%; overflow: hidden; }
       .chart-wrap.chart-compact { margin: 4px 0; }
@@ -783,6 +1003,55 @@ class PufferCard extends LitElement {
 /*  Editor                                                                    */
 /* -------------------------------------------------------------------------- */
 
+/*
+ * The editor shows `info` as four fixed slots ("Extra value 1".."4"), the same
+ * pattern as the four sensor positions, instead of relying on a list selector.
+ * The YAML keeps a plain `info:` list; these two functions convert between the
+ * two shapes. show_label / show_icon are tri-state in the editor (auto / show /
+ * hide), because a boolean field cannot express "not set, use the default".
+ */
+const TRI_TO_EDITOR = (v) => (v === true ? "show" : v === false ? "hide" : "auto");
+const TRI_FROM_EDITOR = { show: true, hide: false };
+
+function infoToEditor(config) {
+  const data = { ...config };
+  delete data.info;
+  const list = Array.isArray(config.info) ? config.info : [];
+  for (let i = 0; i < INFO_MAX; i++) {
+    const e = list[i] || {};
+    data[`info_${i + 1}`] = {
+      info_entity: e.entity || "",
+      info_label:  e.label  || "",
+      info_icon:   e.icon   || "",
+      show_label:  TRI_TO_EDITOR(e.show_label),
+      show_icon:   TRI_TO_EDITOR(e.show_icon),
+    };
+  }
+  return data;
+}
+
+function infoFromEditor(value) {
+  const config = { ...value };
+  const info = [];
+  for (let i = 1; i <= INFO_MAX; i++) {
+    const s = config[`info_${i}`];
+    delete config[`info_${i}`];
+    if (!s) continue;
+    const e = {};
+    if (s.info_entity) e.entity = s.info_entity;
+    if (s.info_label)  e.label  = s.info_label;
+    if (s.info_icon)   e.icon   = s.info_icon;
+    if (s.show_label in TRI_FROM_EDITOR) e.show_label = TRI_FROM_EDITOR[s.show_label];
+    if (s.show_icon  in TRI_FROM_EDITOR) e.show_icon  = TRI_FROM_EDITOR[s.show_icon];
+    // Keep a slot that is being filled in (label typed before the entity);
+    // the card itself ignores entries without an entity.
+    if (e.entity || e.label || e.icon) info.push(e);
+  }
+  if (info.length) config.info = info;
+  else delete config.info;
+  return config;
+}
+
 class PufferCardEditor extends LitElement {
   static get properties() {
     return { hass: { attribute: false }, _config: { state: true } };
@@ -793,13 +1062,7 @@ class PufferCardEditor extends LitElement {
     // so the editor's schema (checkboxes, dropdowns) always reflects what the
     // card will actually render — these are two separate instances with two
     // separate config copies, so the same logic has to run in both places.
-    const merged = {
-      min_temp: 20, max_temp: 80, layout: "normal", show_labels: true,
-      icon: "", icon_mode: "beside",
-      show_chart: false, chart_hours: 24, chart_position: "below",
-      chart_style: "area",
-      ...config,
-    };
+    const merged = { ...CONFIG_DEFAULTS, ...config };
     if (!Array.isArray(merged.chart_sensors) || merged.chart_sensors.length === 0) {
       merged.chart_sensors = POSITIONS
         .map((p) => p.key)
@@ -874,6 +1137,41 @@ class PufferCardEditor extends LitElement {
       { name: "bottom", type: "expandable", title: localize(this.hass, "pos_bottom"), schema: sub },
       { name: "show_chart", selector: { boolean: {} } },
       ...chartSchema,
+      ...this._infoSchema(),
+    ];
+  }
+
+  _infoSchema() {
+    const tri = [
+      { value: "auto", label: localize(this.hass, "opt_auto") },
+      { value: "show", label: localize(this.hass, "opt_show") },
+      { value: "hide", label: localize(this.hass, "opt_hide") },
+    ];
+    const sub = [
+      { name: "info_entity", selector: { entity: {} } },
+      { name: "info_label",  selector: { text: {} } },
+      { name: "info_icon",   selector: { icon: {} } },
+      { type: "grid", schema: [
+        { name: "show_label", selector: { select: { mode: "dropdown", options: tri } } },
+        { name: "show_icon",  selector: { select: { mode: "dropdown", options: tri } } },
+      ]},
+    ];
+    // Filled slots plus one empty slot to add the next value.
+    const filled = Array.isArray(this._config?.info) ? this._config.info.length : 0;
+    const slots  = Math.min(INFO_MAX, filled + 1);
+    return [
+      {
+        name: "info_position",
+        selector: { select: { mode: "dropdown", options:
+          INFO_POSITIONS.map((p) => ({ value: p, label: localize(this.hass, `info_pos_${p}`) })),
+        }},
+      },
+      ...Array.from({ length: slots }, (_, i) => ({
+        name: `info_${i + 1}`,
+        type: "expandable",
+        title: `${localize(this.hass, "info_slot")} ${i + 1}`,
+        schema: sub,
+      })),
     ];
   }
 
@@ -883,6 +1181,7 @@ class PufferCardEditor extends LitElement {
       "name", "icon", "icon_mode", "layout", "show_labels",
       "min_temp", "max_temp", "entity", "label",
       "show_chart", "chart_position", "chart_hours", "chart_style", "chart_sensors",
+      "info_position", "info_entity", "info_label", "info_icon", "show_label", "show_icon",
     ]);
     if (FIELD_KEYS.has(schema.name)) return localize(this.hass, schema.name);
     // Expandable section titles are provided directly in the schema; fall through.
@@ -891,7 +1190,7 @@ class PufferCardEditor extends LitElement {
 
   _valueChanged(ev) {
     ev.stopPropagation();
-    const config = { ...ev.detail.value };
+    const config = infoFromEditor(ev.detail.value);
     if (!config.type) config.type = "custom:puffer-card";
     fireEvent(this, "config-changed", { config });
   }
@@ -899,7 +1198,7 @@ class PufferCardEditor extends LitElement {
   render() {
     if (!this._config || !this.hass) return html``;
     return html`
-      <ha-form .hass=${this.hass} .data=${this._config} .schema=${this._schema()}
+      <ha-form .hass=${this.hass} .data=${infoToEditor(this._config)} .schema=${this._schema()}
                .computeLabel=${this._computeLabel}
                @value-changed=${this._valueChanged}></ha-form>`;
   }
@@ -916,7 +1215,7 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "puffer-card",
   name: "Puffer Card",
-  description: "Represents a buffer tank / boiler with 1-4 temperatures at different heights.",
+  description: "Represents a buffer tank / boiler with 1-4 temperatures at different heights, plus optional extra values.",
   preview: true,
   documentationURL: "https://github.com/giorgioparri/puffer-card",
 });
