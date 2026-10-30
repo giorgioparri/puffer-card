@@ -20,6 +20,7 @@ Everything shown here can also be set from the card's visual editor; YAML is onl
   - [Between tank and chart](#between-tank-and-chart)
   - [Bottom](#bottom)
   - [Left](#left)
+  - [Mixing positions](#mixing-positions)
   - [Visual editor](#visual-editor)
 
 ## Layouts
@@ -181,14 +182,16 @@ bottom:
 
 Besides the temperatures, the card can show up to four values from any entity: the system pressure, a pump or a valve, a setpoint. They are shown as they are — no color scale, no chart — and formatted by Home Assistant itself, so numbers follow your locale and states are translated (`on` becomes *Running* for a pump). Click a value to open the entity's more-info dialog.
 
+Each value has its own position, so the pressure can sit in the title row and the pump at the bottom of the same card.
+
 ### Options
 
-`info_position` sets where the values go, `info` lists them:
+`info` lists the values, each with its own `position`:
 
 ```yaml
-info_position: top        # top, inside, between, bottom or left
 info:
   - entity: sensor.heating_pressure
+    position: top         # top, inside, between, bottom or left
     label: Pressure       # optional, defaults to the entity's name
     icon: mdi:gauge       # optional, defaults to the entity's icon
     show_label: true      # optional, see below
@@ -198,6 +201,7 @@ info:
 | Key | Default | Description |
 |---|---|---|
 | `entity` | – | Any entity |
+| `position` | `top` | `top`, `inside`, `between`, `bottom` or `left` |
 | `label` | entity name | Text shown next to the value, and as tooltip |
 | `icon` | entity icon | Icon; without one, Home Assistant picks it from the domain and device class |
 | `show_label` | depends on position | `true` / `false` to override the default |
@@ -205,7 +209,7 @@ info:
 
 Some positions have little room, so whether label and icon are shown depends on where the values go. Set `show_label` or `show_icon` on an entry to override it; when the label is hidden it is still shown as a tooltip.
 
-| `info_position` | Label | Icon |
+| `position` | Label | Icon |
 |---|---|---|
 | `top` | hidden | shown |
 | `inside` | shown, hidden in compact | hidden |
@@ -213,22 +217,13 @@ Some positions have little room, so whether label and icon are shown depends on 
 | `bottom` | shown | shown |
 | `left` | shown, hidden in compact | hidden |
 
-The examples below all use these two entries:
+Several values with the same position are grouped together, in the order of the list.
 
-```yaml
-info:
-  - entity: sensor.heating_pressure
-    label: Pressure
-  - entity: binary_sensor.circulation_pump
-    label: Pump
-    icon: mdi:pump
-```
-
-The pressure sensor has no `icon`: the gauge comes from its `pressure` device class.
+The examples below all use the same two entries — the pressure and the pump — placed at the same position, so each picture shows one position at a time; [Mixing positions](#mixing-positions) puts them in two different places. The pressure sensor has no `icon`: the gauge comes from its `pressure` device class.
 
 ### Top
 
-The default. The values sit in the title row, aligned right, so the card gets no taller. Labels are hidden by default to leave room for the title.
+The default position. The values sit in the title row, aligned right, so the card gets no taller. Labels are hidden by default to leave room for the title.
 
 <img src="images/info-top.png" alt="Extra values in the title row" width="380">
 
@@ -245,11 +240,12 @@ middle:
 bottom:
   entity: sensor.buffer_bottom
   label: Return
-info_position: top
 info:
   - entity: sensor.heating_pressure
+    position: top
     label: Pressure
   - entity: binary_sensor.circulation_pump
+    position: top
     label: Pump
     icon: mdi:pump
 ```
@@ -273,16 +269,17 @@ middle:
 bottom:
   entity: sensor.buffer_bottom
   label: Return
-info_position: inside
 info:
   - entity: sensor.heating_pressure
+    position: inside
     label: Pressure
   - entity: binary_sensor.circulation_pump
+    position: inside
     label: Pump
     icon: mdi:pump
 ```
 
-> **Compact layout:** the small tank only has room for one value, so only the **first** `info` entry is shown, without its label. The others are ignored; pick another position if you need more.
+> **Compact layout:** the small tank only has room for one value, so only the **first** entry with `position: inside` is shown, without its label. Further `inside` entries are ignored; entries at other positions are shown as usual.
 
 ### Between tank and chart
 
@@ -305,11 +302,12 @@ middle:
 bottom:
   entity: sensor.buffer_bottom
   label: Return
-info_position: between
 info:
   - entity: sensor.heating_pressure
+    position: between
     label: Pressure
   - entity: binary_sensor.circulation_pump
+    position: between
     label: Pump
     icon: mdi:pump
 ```
@@ -334,11 +332,12 @@ middle:
 bottom:
   entity: sensor.buffer_bottom
   label: Return
-info_position: bottom
 info:
   - entity: sensor.heating_pressure
+    position: bottom
     label: Pressure
   - entity: binary_sensor.circulation_pump
+    position: bottom
     label: Pump
     icon: mdi:pump
 ```
@@ -363,17 +362,48 @@ middle:
 bottom:
   entity: sensor.buffer_bottom
   label: Return
-info_position: left
 info:
   - entity: sensor.heating_pressure
+    position: left
     label: Pressure
   - entity: binary_sensor.circulation_pump
+    position: left
+    label: Pump
+    icon: mdi:pump
+```
+
+### Mixing positions
+
+Every value goes where its own `position` says: here the pressure in the title row and the pump at the bottom.
+
+<img src="images/info-mixed.png" alt="Pressure in the title row, pump at the bottom" width="380">
+
+```yaml
+type: custom:puffer-card
+name: Heating buffer
+icon: mdi:propane-tank-outline
+show_chart: true
+top:
+  entity: sensor.buffer_top
+  label: Flow
+middle:
+  entity: sensor.buffer_middle
+  label: Storage
+bottom:
+  entity: sensor.buffer_bottom
+  label: Return
+info:
+  - entity: sensor.heating_pressure
+    position: top
+    label: Pressure
+  - entity: binary_sensor.circulation_pump
+    position: bottom
     label: Pump
     icon: mdi:pump
 ```
 
 ### Visual editor
 
-The editor shows the position as a dropdown and the values as up to four sections, *Extra value 1* to *4*: one more appears as soon as the previous one is filled in. *Show label* and *Show icon* offer *Auto*, *Show* and *Hide*; *Auto* leaves the option out of the configuration, so the default of the chosen position applies.
+The editor shows the values as up to four sections, *Extra value 1* to *4*: one more appears as soon as the previous one is filled in. Each section has its own *Position*, right below the entity. *Show label* and *Show icon* offer *Auto*, *Show* and *Hide*; *Auto* leaves the option out of the configuration, so the default of that value's position applies.
 
 <img src="images/editor-info.png" alt="Extra values in the visual editor" width="512">
