@@ -3,8 +3,8 @@
  * Custom Lovelace card that visually represents a buffer tank / hot-water
  * cylinder with 1 to 4 temperatures placed at different heights.
  * Optionally displays a history chart below (or above) the tank, and up to
- * four extra values of any entity (pressure, pump state, ...) at a chosen
- * position.
+ * four extra values of any entity (pressure, pump state, ...), each at its
+ * own position.
  *
  * Repo: https://github.com/giorgioparri/puffer-card
  * License: MIT
@@ -52,7 +52,7 @@ const POSITIONS = [
   { key: "bottom", labelKey: "label_bottom" },
 ];
 
-/** Where the extra values (`info`) can be placed. The first one is the default. */
+/** Where an extra value (`info[].position`) can be placed. The first one is the default. */
 const INFO_POSITIONS = ["top", "inside", "between", "bottom", "left"];
 
 /** Maximum number of extra values. */
@@ -78,7 +78,6 @@ const CONFIG_DEFAULTS = {
   icon: "", icon_mode: "beside",
   show_chart: false, chart_hours: 24, chart_position: "below",
   chart_style: "area",
-  info_position: "top",
 };
 
 /** Fixed series colors for the chart (independent of temperature ramp). */
@@ -376,8 +375,7 @@ class PufferCard extends LitElement {
   getCardSize() {
     let size = this._config?.layout === "compact" ? 2 : 5;
     if (this._config?.show_chart) size += 2;
-    const pos = this._infoPos();
-    if ((pos === "between" || pos === "bottom") && this._infoItems(false).length) size += 1;
+    if (this._infoItems(false).some((it) => it.pos === "between" || it.pos === "bottom")) size += 1;
     return size;
   }
 
@@ -492,8 +490,9 @@ class PufferCard extends LitElement {
 
   /* ---- extra values (info) ---------------------------------------------- */
 
-  _infoPos() {
-    const p = this._config?.info_position;
+  /** Position of one `info` entry; unknown or missing values fall back to the default. */
+  _infoPos(entry) {
+    const p = entry?.position;
     return INFO_POSITIONS.includes(p) ? p : INFO_POSITIONS[0];
   }
 
@@ -513,21 +512,27 @@ class PufferCard extends LitElement {
   }
 
   /**
-   * Resolved `info` entries: at most INFO_MAX, entries without an entity are
-   * skipped, and inside the compact tank only the first one fits.
+   * Resolved `info` entries, each with its own position: at most INFO_MAX,
+   * entries without an entity are skipped, and inside the compact tank only
+   * the first `inside` entry fits.
    */
   _infoItems(compact) {
-    const pos  = this._infoPos();
-    const defs = INFO_DEFAULTS[pos];
-    const narrow = compact && (pos === "inside" || pos === "left");
-    let list = Array.isArray(this._config?.info)
+    const list = Array.isArray(this._config?.info)
       ? this._config.info.filter((i) => i && i.entity).slice(0, INFO_MAX)
       : [];
-    if (compact && pos === "inside") list = list.slice(0, 1);
+    let insideSeen = false;
     return list.map((i) => {
+      const pos = this._infoPos(i);
+      if (compact && pos === "inside") {
+        if (insideSeen) return null;
+        insideSeen = true;
+      }
+      const defs   = INFO_DEFAULTS[pos];
+      const narrow = compact && (pos === "inside" || pos === "left");
       const st = this.hass?.states?.[i.entity] || null;
       const { val, unit } = this._infoValue(st);
       return {
+        pos,
         entity: i.entity,
         stateObj: st,
         label: (i.label && i.label.toString()) || st?.attributes?.friendly_name || i.entity,
@@ -536,7 +541,12 @@ class PufferCard extends LitElement {
         showLabel: typeof i.show_label === "boolean" ? i.show_label : (narrow ? false : defs.label),
         showIcon:  typeof i.show_icon  === "boolean" ? i.show_icon  : defs.icon,
       };
-    });
+    }).filter(Boolean);
+  }
+
+  /** Entries placed at one position, in list order. */
+  _infoAt(items, ...positions) {
+    return items.filter((it) => positions.includes(it.pos));
   }
 
   /**
@@ -770,28 +780,30 @@ class PufferCard extends LitElement {
         ${data.map((p) => this._badge(p, min, max, showLabels, this._dotColor(p, data, min, max), m))}
       </svg>`;
 
-    const pos = this._infoPos();
-    let overlay = "";
-    if (items.length && pos === "inside") {
+    const inside = this._infoAt(items, "inside");
+    const left   = this._infoAt(items, "left");
+    const overlay = [];
+    if (inside.length) {
       // Centred on the tank body, in the gaps between the sensor lines.
-      const offs = this._infoOffsets(data, items.length);
-      overlay = items.map((it, i) => this._at(
+      const offs = this._infoOffsets(data, inside.length);
+      overlay.push(...inside.map((it, i) => this._at(
         (110 / 380) * 100,
         ((m.liquidTop + offs[i] * m.liquidH) / m.viewH) * 100,
         this._chip(it, "on-tank"),
-      ));
-    } else if (items.length && pos === "left") {
+      )));
+    }
+    if (left.length) {
       // The free strip left of the tank (viewBox x 0..40), centred on the liquid.
-      overlay = this._at(
+      overlay.push(this._at(
         (18 / 380) * 100,
         ((m.liquidTop + m.liquidH / 2) / m.viewH) * 100,
-        this._vstack(items),
-      );
+        this._vstack(left),
+      ));
     }
-    const tankBox = overlay
+    const tankBox = overlay.length
       ? html`<div class="tank-wrap">${tank}${this._overlay(380, m.viewH, overlay)}</div>`
       : tank;
-    const between = pos === "between" && useChart ? this._chips(items, "between") : "";
+    const between = useChart ? this._chips(this._infoAt(items, "between"), "between") : "";
 
     return html`
       ${useChart && chartAbove  ? this._renderChart(data, false) : ""}
@@ -831,15 +843,16 @@ class PufferCard extends LitElement {
     const useChart   = this._config.show_chart;
     const chartAbove = this._config.chart_position === "above";
     const quad       = data.length === 4;
-    const pos        = this._infoPos();
+    const onTank     = this._infoAt(items, "inside");   // at most one, see _infoItems()
+    const left       = this._infoAt(items, "left");
     // Mini tank: viewBox 84 x 124, liquid from y 14 to y 110.
-    const inside = items.length && pos === "inside"
+    const inside = onTank.length
       ? this._overlay(84, 124, this._at(50, ((14 + this._infoOffsets(data, 1)[0] * 96) / 124) * 100,
-          this._chip(items[0], "on-tank small")))
+          this._chip(onTank[0], "on-tank small")))
       : "";
     const body = html`
       <div class="compact ${quad ? "is-quad" : ""}">
-        ${items.length && pos === "left" ? this._vstack(items) : ""}
+        ${left.length ? this._vstack(left) : ""}
         <div class="mini">${this._miniTank(data, min, max)}${inside}</div>
         <div class="rows">
           ${data.map((p) => {
@@ -858,7 +871,7 @@ class PufferCard extends LitElement {
           })}
         </div>
       </div>`;
-    const between = pos === "between" && useChart ? this._chips(items, "between small") : "";
+    const between = useChart ? this._chips(this._infoAt(items, "between"), "between small") : "";
     return html`
       ${useChart && chartAbove  ? this._renderChart(data, true) : ""}
       ${useChart && chartAbove  ? between : ""}
@@ -881,13 +894,15 @@ class PufferCard extends LitElement {
     const hasIcon  = !!this._config.icon;
     const replaceTitle = hasIcon && this._config.icon_mode === "replace";
 
-    const pos   = this._infoPos();
-    const items = this._infoItems(compact);
-    const topChips = pos === "top" && items.length
-      ? this._chips(items, `in-title${compact ? " small" : ""}`)
+    const items    = this._infoItems(compact);
+    const topItems = this._infoAt(items, "top");
+    const topChips = topItems.length
+      ? this._chips(topItems, `in-title${compact ? " small" : ""}`)
       : "";
-    const atBottom = items.length &&
-      (pos === "bottom" || (pos === "between" && !this._config.show_chart));
+    // Without the chart, `between` has nothing to sit between and joins `bottom`.
+    const atBottom = this._config.show_chart
+      ? this._infoAt(items, "bottom")
+      : this._infoAt(items, "between", "bottom");
     const name = replaceTitle ? "" : this._config.name;
 
     return html`
@@ -904,7 +919,7 @@ class PufferCard extends LitElement {
             ? this._renderCompact(data, min, max, showLabels, items)
             : this._renderNormal(data, min, max, showLabels, items)}
         </div>
-        ${atBottom ? this._chips(items, `bottom${compact ? " small" : ""}`) : ""}
+        ${this._chips(atBottom, `bottom${compact ? " small" : ""}`)}
       </ha-card>`;
   }
 
@@ -1009,6 +1024,8 @@ class PufferCard extends LitElement {
  * The YAML keeps a plain `info:` list; these two functions convert between the
  * two shapes. show_label / show_icon are tri-state in the editor (auto / show /
  * hide), because a boolean field cannot express "not set, use the default".
+ * The position is always written for a kept entry, so the YAML says where each
+ * value goes.
  */
 const TRI_TO_EDITOR = (v) => (v === true ? "show" : v === false ? "hide" : "auto");
 const TRI_FROM_EDITOR = { show: true, hide: false };
@@ -1020,8 +1037,9 @@ function infoToEditor(config) {
   for (let i = 0; i < INFO_MAX; i++) {
     const e = list[i] || {};
     data[`info_${i + 1}`] = {
-      info_entity: e.entity || "",
-      info_label:  e.label  || "",
+      info_entity:   e.entity || "",
+      info_position: INFO_POSITIONS.includes(e.position) ? e.position : INFO_POSITIONS[0],
+      info_label:    e.label  || "",
       info_icon:   e.icon   || "",
       show_label:  TRI_TO_EDITOR(e.show_label),
       show_icon:   TRI_TO_EDITOR(e.show_icon),
@@ -1032,6 +1050,9 @@ function infoToEditor(config) {
 
 function infoFromEditor(value) {
   const config = { ...value };
+  // 1.6.0-beta.1 had a card-wide `info_position`; it is no longer read, so the
+  // editor drops it instead of carrying a dead key forward.
+  delete config.info_position;
   const info = [];
   for (let i = 1; i <= INFO_MAX; i++) {
     const s = config[`info_${i}`];
@@ -1039,12 +1060,14 @@ function infoFromEditor(value) {
     if (!s) continue;
     const e = {};
     if (s.info_entity) e.entity = s.info_entity;
+    e.position = INFO_POSITIONS.includes(s.info_position) ? s.info_position : INFO_POSITIONS[0];
     if (s.info_label)  e.label  = s.info_label;
     if (s.info_icon)   e.icon   = s.info_icon;
     if (s.show_label in TRI_FROM_EDITOR) e.show_label = TRI_FROM_EDITOR[s.show_label];
     if (s.show_icon  in TRI_FROM_EDITOR) e.show_icon  = TRI_FROM_EDITOR[s.show_icon];
     // Keep a slot that is being filled in (label typed before the entity);
-    // the card itself ignores entries without an entity.
+    // the card itself ignores entries without an entity. The position alone
+    // does not keep a slot: it always has a value.
     if (e.entity || e.label || e.icon) info.push(e);
   }
   if (info.length) config.info = info;
@@ -1149,6 +1172,12 @@ class PufferCardEditor extends LitElement {
     ];
     const sub = [
       { name: "info_entity", selector: { entity: {} } },
+      {
+        name: "info_position",
+        selector: { select: { mode: "dropdown", options:
+          INFO_POSITIONS.map((p) => ({ value: p, label: localize(this.hass, `info_pos_${p}`) })),
+        }},
+      },
       { name: "info_label",  selector: { text: {} } },
       { name: "info_icon",   selector: { icon: {} } },
       { type: "grid", schema: [
@@ -1159,20 +1188,12 @@ class PufferCardEditor extends LitElement {
     // Filled slots plus one empty slot to add the next value.
     const filled = Array.isArray(this._config?.info) ? this._config.info.length : 0;
     const slots  = Math.min(INFO_MAX, filled + 1);
-    return [
-      {
-        name: "info_position",
-        selector: { select: { mode: "dropdown", options:
-          INFO_POSITIONS.map((p) => ({ value: p, label: localize(this.hass, `info_pos_${p}`) })),
-        }},
-      },
-      ...Array.from({ length: slots }, (_, i) => ({
-        name: `info_${i + 1}`,
-        type: "expandable",
-        title: `${localize(this.hass, "info_slot")} ${i + 1}`,
-        schema: sub,
-      })),
-    ];
+    return Array.from({ length: slots }, (_, i) => ({
+      name: `info_${i + 1}`,
+      type: "expandable",
+      title: `${localize(this.hass, "info_slot")} ${i + 1}`,
+      schema: sub,
+    }));
   }
 
   _computeLabel = (schema) => {
