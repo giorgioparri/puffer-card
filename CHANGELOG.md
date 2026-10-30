@@ -8,9 +8,9 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Added
 - Extra values: up to four values from any entity — the system pressure, a pump, a valve — shown next to the temperatures. They are formatted by Home Assistant itself, so numbers follow your locale and states are translated, and they stay out of the color scale and the chart. Click one to open its more-info dialog. ([#13](https://github.com/giorgioparri/puffer-card/issues/13))
-- `info_position` places them in the title row (`top`, the default), on the tank (`inside`), between the tank and the chart (`between`), at the bottom of the card (`bottom`) or rotated along the left side of the tank (`left`). `top`, `inside` and `left` don't make the card any taller.
+- Each value has its own `position`: in the title row (`top`, the default), on the tank (`inside`), between the tank and the chart (`between`), at the bottom of the card (`bottom`) or rotated along the left side of the tank (`left`). Values can be spread over different positions, and `top`, `inside` and `left` don't make the card any taller.
 - `show_label` and `show_icon` on each value override whether its label and icon are shown; by default this depends on the position, and a hidden label is still shown as a tooltip. Without an `icon`, Home Assistant picks one from the entity's domain and device class.
-- Everything above can be set from the visual editor: a position dropdown and up to four *Extra value* sections, a new one appearing as soon as the previous one is filled in.
+- Everything above can be set from the visual editor: up to four *Extra value* sections, each with its own position, a new one appearing as soon as the previous one is filled in.
 - [DOCS.md](https://github.com/giorgioparri/puffer-card/blob/main/DOCS.md) shows every layout with the configuration that produces it.
 
 ### Changed

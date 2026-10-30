@@ -13,7 +13,7 @@ heating and domestic hot water. It shows up to four temperatures at different
 heights and colors the tank according to the real thermal stratification.
 Extra values such as the system pressure or a pump state can sit alongside.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.6.0-beta.1/images/standard.png" alt="Puffer Card – standard layout" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.6.0-beta.2/images/standard.png" alt="Puffer Card – standard layout" width="420">
 
 ## Features
 
@@ -28,7 +28,7 @@ Extra values such as the system pressure or a pump state can sit alongside.
 - **Optional history chart** below or above the tank, with selectable period
   (2 h – 48 h), smooth area or line style, and per-sensor visibility.
 - Up to four **extra values** from any entity (pressure, pump, valve, ...),
-  placed in the title row, on the tank, beside it, or below it.
+  each placed on its own in the title row, on the tank, beside it, or below it.
 - Click any value to open the entity's **more-info** dialog.
 - Built-in **graphical editor** — no YAML required.
 - **Multilingual** UI (English / Italian, more welcome) following Home Assistant's language.
@@ -96,11 +96,12 @@ chart_sensors:          # which positions to include in the chart
   - middle
   - extra
   - bottom
-info_position: top      # top, inside, between, bottom or left
 info:                   # up to four extra values, any entity
   - entity: sensor.heating_pressure
+    position: top       # top, inside, between, bottom or left
     label: Pressure
   - entity: binary_sensor.circulation_pump
+    position: bottom
     label: Pump
     icon: mdi:pump
 ```
@@ -132,9 +133,9 @@ overlaps — layouts with 1 to 3 sensors are unaffected.
 | `chart_hours` | number | `24` | History period: `2`, `6`, `12`, `24` or `48` |
 | `chart_style` | string | `area` | `area` (filled) or `line` |
 | `chart_sensors` | list | all | Positions to include: `top`, `middle`, `extra`, `bottom` |
-| `info_position` | string | `top` | Where the extra values go: `top`, `inside`, `between`, `bottom` or `left` |
-| `info` | list | – | Up to four extra values: `{ entity, label, icon, show_label, show_icon }` |
+| `info` | list | – | Up to four extra values: `{ entity, position, label, icon, show_label, show_icon }` |
 | `info[].entity` | string | – | Any entity |
+| `info[].position` | string | `top` | Where this value goes: `top`, `inside`, `between`, `bottom` or `left` |
 | `info[].label` | string | entity name | Label shown next to the value, and as tooltip |
 | `info[].icon` | string | entity icon | Icon shown next to the value |
 | `info[].show_label` | boolean | by position | Override whether the label is shown |
@@ -143,21 +144,22 @@ overlaps — layouts with 1 to 3 sensors are unaffected.
 Whether an extra value shows its label and icon by default depends on the
 position, since some have little room. The defaults for each position, and
 the limits of `inside` and `left` in the compact layout, are in
-[DOCS.md](https://github.com/giorgioparri/puffer-card/blob/v1.6.0-beta.1/DOCS.md#extra-values).
+[DOCS.md](https://github.com/giorgioparri/puffer-card/blob/v1.6.0-beta.2/DOCS.md#extra-values).
 In the visual editor a new *Extra value* section appears as soon as the
 previous one is filled in, up to four.
 
 ## Extra values
 
 Up to four values from any entity, shown as Home Assistant formats them —
-numbers in your locale, states translated — without a color scale. Here in the
-title row, the default position, where they don't make the card any taller:
+numbers in your locale, states translated — without a color scale. Each value
+has its own position: here the pressure sits in the title row, the default,
+and the pump at the bottom of the card.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.6.0-beta.1/images/info-top.png" alt="Extra values in the title row" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.6.0-beta.2/images/info-mixed.png" alt="Pressure in the title row, pump at the bottom" width="420">
 
 ## Examples
 
-[DOCS.md](https://github.com/giorgioparri/puffer-card/blob/v1.6.0-beta.1/DOCS.md)
+[DOCS.md](https://github.com/giorgioparri/puffer-card/blob/v1.6.0-beta.2/DOCS.md)
 shows every layout with the configuration that produces it: standard and
 compact, values only, two and four sensors, the history chart, and the extra
 values in each of their five positions, plus the visual editor.
