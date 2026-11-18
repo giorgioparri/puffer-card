@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
-## [1.6.0] - 2026-10-29
+## [1.6.0] - 2026-11-18
 
 ### Added
 - Extra values: up to four values from any entity — the system pressure, a pump, a valve — shown next to the temperatures. They are formatted by Home Assistant itself, so numbers follow your locale and states are translated, and they stay out of the color scale and the chart. Click one to open its more-info dialog. ([#13](https://github.com/giorgioparri/puffer-card/issues/13))

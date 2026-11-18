@@ -13,7 +13,7 @@ heating and domestic hot water. It shows up to four temperatures at different
 heights and colors the tank according to the real thermal stratification.
 Extra values such as the system pressure or a pump state can sit alongside.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.6.0-beta.2/images/standard.png" alt="Puffer Card – standard layout" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.6.0/images/standard.png" alt="Puffer Card – standard layout" width="420">
 
 ## Features
 
@@ -144,7 +144,7 @@ overlaps — layouts with 1 to 3 sensors are unaffected.
 Whether an extra value shows its label and icon by default depends on the
 position, since some have little room. The defaults for each position, and
 the limits of `inside` and `left` in the compact layout, are in
-[DOCS.md](https://github.com/giorgioparri/puffer-card/blob/v1.6.0-beta.2/DOCS.md#extra-values).
+[DOCS.md](https://github.com/giorgioparri/puffer-card/blob/v1.6.0/DOCS.md#extra-values).
 In the visual editor a new *Extra value* section appears as soon as the
 previous one is filled in, up to four.
 
@@ -155,11 +155,11 @@ numbers in your locale, states translated — without a color scale. Each value
 has its own position: here the pressure sits in the title row, the default,
 and the pump at the bottom of the card.
 
-<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.6.0-beta.2/images/info-mixed.png" alt="Pressure in the title row, pump at the bottom" width="420">
+<img src="https://raw.githubusercontent.com/giorgioparri/puffer-card/v1.6.0/images/info-mixed.png" alt="Pressure in the title row, pump at the bottom" width="420">
 
 ## Examples
 
-[DOCS.md](https://github.com/giorgioparri/puffer-card/blob/v1.6.0-beta.2/DOCS.md)
+[DOCS.md](https://github.com/giorgioparri/puffer-card/blob/v1.6.0/DOCS.md)
 shows every layout with the configuration that produces it: standard and
 compact, values only, two and four sensors, the history chart, and the extra
 values in each of their five positions, plus the visual editor.
