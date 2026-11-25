@@ -14,6 +14,9 @@
     "check:translations": "node scripts/check-translations.js",
     "check": "npm run build && npm run check:translations"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "dependencies": {
     "lit": "3.3.3"
   },
